@@ -202,7 +202,7 @@ printf "Fits file count and number of detections saved to: %s\n\n" "$OUTFILE"
 adirs=15	# delete older ArchivedFiles directories
 cdirs=15	# delete older CapturedFiles directories
 bz2=28		# delete older tar.bz2 archives
-logs=21		# delete log files older than this number of days
+logs=28		# delete log files older than this number of days
 
 # Define function clean_dir, with arguments:
 # 1. directory to clean
