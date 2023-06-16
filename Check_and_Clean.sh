@@ -4,7 +4,6 @@
 # This script requires a command line argument ("$1") containing 
 # the full path to the CapturedFiles directory for a given night
 
-
 capture_dir="$(dirname "$1")"
 data_dir="$(dirname "$capture_dir")"
 archive_dir="$data_dir"/ArchivedFiles
@@ -12,7 +11,7 @@ night_dir="$(basename "$1")"
 station=${night_dir:0:6}
 OUTFILE=$data_dir"/"${station}_"fits_counts.txt"
 
-printf '\nCheck_and_Clean.sh, revised 23-May, 2023, 7968 bytes,'
+printf '\nCheck_and_Clean.sh, revised 15-Jun, 2023, 8814 bytes,'
 printf ' was called with\nArg (directory) = %s \n' "$1"
 printf 'This script writes results to %s \n' $OUTFILE
 printf ' and can delete older files to make room for more capture directories\n\n'
@@ -30,12 +29,11 @@ short_fall=0
 secs_missed=0
 min_missed=0
 
-echo data_dir:    $data_dir
-echo archive_dir: $archive_dir
-echo capture_dir: $capture_dir
-echo night_dir:   $night_dir
-echo station:     $station
-printf "argument passed: %s\n" $1
+#echo data_dir:    $data_dir
+#echo archive_dir: $archive_dir
+#echo capture_dir: $capture_dir
+#echo night_dir:   $night_dir
+#echo station:     $station
 
 # ____________________
 # Sanity checks
@@ -65,15 +63,15 @@ fi
 # ____________________
 # Calculate capture length in seconds using newest log file
 capture_file=$(ls -Art $data_dir/logs/log_*.log | tail -n 1)
-echo Checking log file: $capture_file for capture duration
+#echo Checking log file: $capture_file for capture duration
 
 duration_line=$(grep -m1 Waiting $capture_file)
-echo log file line: $duration_line
+#echo log file line: $duration_line
 
 hrs=$(echo "$duration_line" | awk '{print $10}')
 seconds=`echo "$hrs*3600" | bc`
 capture_len=${seconds:0:5}
-echo hours: $hrs, seconds: $seconds, rounded off seconds: $capture_len
+#echo hours: $hrs, seconds: $seconds, rounded off seconds: $capture_len
 
 # ____________________
 # Collect information for the output file
@@ -117,7 +115,7 @@ fi
 # The variable "id_string" holds the station name and date in a pattern.
 
 id_string=${night_dir:0:15}
-printf "id_string: %s\n" "$id_string"
+#printf "id_string: %s\n" "$id_string"
 
 # CapturedFiles
 pushd "$capture_dir" > /dev/null
@@ -202,7 +200,7 @@ printf "Fits file count and number of detections saved to: %s\n\n" "$OUTFILE"
 adirs=15	# delete older ArchivedFiles directories
 cdirs=15	# delete older CapturedFiles directories
 bz2=28		# delete older tar.bz2 archives
-logs=21		# delete log files older than this number of days
+logs=28		# delete log files older than this number of days
 
 # Define function clean_dir, with arguments:
 # 1. directory to clean
@@ -227,7 +225,7 @@ function clean_dir()
 	printf "%d: %s\n" $i ${dir_array[i]}
 	if [[ $i -gt $2-1 ]]; then
 	    printf "Removing directory %s\n" ${dir_array[i]}
-	    rm -f -r ${dir_array[i]}
+	    rm -fr ${dir_array[i]}
 	else
 	    printf "Retaining directory %s\n" ${dir_array[i]}
 	fi
@@ -237,27 +235,21 @@ function clean_dir()
 if [ $Cleanup -gt 0 ]; then
    printf "Deleting old directories and files\n"
 
-   cd $archive_dir
    if [ $adirs -gt 0 ]; then
        printf "Deleting ArchivedFiles directories more than %s days old\n" "${adirs}"
        clean_dir "${archive_dir}" $adirs
-       # adirs=$((adirs-1))
-       # find -mtime +$adirs -type d | xargs rm -f -r
+    fi
+
+   if [ $cdirs -gt 0 ]; then
+       printf "Deleting CapturedFiles directories more than %s days old\n" "${cdirs}"
+       clean_dir "${capture_dir}" $cdirs 
    fi
 
+   cd $archive_dir
    if [ $bz2 -gt 0 ]; then
       printf "Deleting tar.bz2 files more than %s days old\n" "${bz2}"
       bz2=$((bz2-1))
       find -type f -mtime +$bz2 -delete;
-   fi
-
-   if [ $cdirs -gt 0 ]; then
-       clean_dir "${capture_dir}" $cdirs 
-       
-      # cd $capture_dir
-      # printf "Deleting CapturedFiles directories more than %s days old\n" "${cdirs}"
-      # cdirs=$((cdirs-1))
-      #find -mtime +$cdirs -type d | xargs rm -f -r
    fi
 
    if [ $logs -gt 0 ]; then
